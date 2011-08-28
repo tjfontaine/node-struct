@@ -1,0 +1,8 @@
+This is an implementation of Python's struct module
+
+http://docs.python.org/library/struct.html
+
+--
+
+It's nearly complete, a few cases aren't handled like 0 sized padding,
+and 8 byte data types
