@@ -206,7 +206,7 @@ var pack = function(fmt) {
   calls.forEach(function(c) { expected += c.size })
 
   if (expected != values.length) {
-    throw new Error("Argument mismatch, Expected: " + calls.length + " Received: " + arguments.length)
+    throw new Error("Argument mismatch, Expected: " + expected + " Received: " + values.length)
   }
 
   var pos = 0
