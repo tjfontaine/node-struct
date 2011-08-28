@@ -200,22 +200,33 @@ exports.calcsize = calcsize
 var pack = function(fmt) {
   var calls = fmt_to_list(fmt, 'write')
   var result = new Buffer(calc_size(calls))
+  var values = Array.prototype.slice.call(arguments, 1)
 
-  if (calls.length != arguments.length - 1) {
-    throw new Error("Argument mismatch, Expected: " + calls.length + " Received: " + arguments.length - 1)
+  var expected = 0
+  calls.forEach(function(c) { expected += c.size })
+
+  if (expected != values.length) {
+    throw new Error("Argument mismatch, Expected: " + calls.length + " Received: " + arguments.length)
   }
 
   var pos = 0
+  var arg_pos = 0
 
   for (var i=0; i<calls.length; i++) {
     var call = calls[i]
-    var arg  = arguments[i+1]
+    var arg  = values[arg_pos]
     if (call.entry.string) {
       result.write(arg, pos, arg.length)
+      arg_pos += 1
+      pos += call.size * call.entry.size
     } else {
-      Buffer.prototype[call.meth].call(result, arg, pos)
+      for (var j=0; j<call.size; j++) {
+        var arg = values[arg_pos]
+        Buffer.prototype[call.meth].call(result, arg, pos)
+        pos += call.entry.size
+        arg_pos += 1
+      }
     }
-    pos += call.size * call.entry.size
   }
 
   return result
