@@ -8,4 +8,5 @@
   ],
   "homepage": "http://github.com/tjfontaine/node-struct",
   "main": "struct.js",
+  "dependencies": []
 }
