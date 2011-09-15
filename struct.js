@@ -65,14 +65,16 @@ var entries = {
     size: 4,
     native: 'UInt32',
   },
-  q: { //TODO XXX FIXME
+  /* TODO XXX FIXME
+  q: {
     size: 8,
     native: 'Int32',
   },
-  Q: { //TODO XXX FIXME
+  Q: {
     size: 8,
     native: 'UInt32',
   },
+  */
   f: {
     size: 4,
     native: 'Float',
@@ -96,139 +98,143 @@ var ENDIAN = {
 };
 
 var format_method = function(entry, prefix, endian) {
-  var meth = prefix + entry.native
+  var meth = prefix + entry.native;
   if (entry.endian !== false) {
     if (endian !== undefined && endian !== false) {
-      meth += endian
+      meth += endian;
     } else {
-      meth += 'LE'
+      meth += 'LE';
     }
   }
-  return meth
-}
+  return meth;
+};
 
 var fmt_to_list = function(fmt, prefix) {
-  var elm = fmt.split('')
-  elm.reverse()
+  var elm = fmt.split('');
+  elm.reverse();
 
-  var c = elm.pop()
-  var endian = ENDIAN[c]
+  var c = elm.pop();
+  var endian = ENDIAN[c];
 
   if (endian !== undefined) {
-    c = elm.pop()
+    c = elm.pop();
   }
 
-  var count = ''
-  var result = []
+  var count = '';
+  var result = [];
 
   while(c) {
     if (isFinite(c)) {
-      count += c
-      c = elm.pop()
-      continue
+      count += c;
+      c = elm.pop();
+      continue;
     } else {
       if (entries[c]) {
-        var size = parseInt(count)
-        count = ''
+        var size = parseInt(count, 10);
+        count = '';
 
         if (isNaN(size)) {
-          size = 1
+          size = 1;
         }
 
-        var entry = entries[c]
+        var entry = entries[c];
 
         result.push({
           meth: format_method(entry, prefix, endian),
           size: size,
           entry: entry,
-        })
+        });
 
-        c = elm.pop()
+        c = elm.pop();
       } else {
-        throw new Error("Not a valid format character: " + c)
+        throw new Error("Not a valid format character: " + c);
       }
     }
   }
 
-  return result
-}
+  return result;
+};
 
 var unpack = function(fmt, input, encoding) {
   if (!Buffer.isBuffer(input)) {
-    throw new Error("Input not a buffer object")
+    throw new Error("Input not a buffer object");
   }
 
   if (!encoding) {
-    encoding = 'ascii'
+    encoding = 'ascii';
   }
 
-  var calls = fmt_to_list(fmt, 'read')
+  var calls = fmt_to_list(fmt, 'read');
 
-  var result = []
-  var pos = 0
+  var result = [];
+  var pos = 0;
 
   calls.forEach(function(c) {
+    var i;
     if (c.entry.string) {
-      result.push(input.toString(encoding, pos, c.size))
-      pos += c.size
+      result.push(input.toString(encoding, pos, c.size));
+      pos += c.size;
     } else {
-      for (var i = 0; i < c.size; i++) {
-        result.push(Buffer.prototype[c.meth].call(input, pos))
-        pos += c.entry.size
+      for (i = 0; i < c.size; i++) {
+        result.push(Buffer.prototype[c.meth].call(input, pos));
+        pos += c.entry.size;
       }
     }
-  })
+  });
 
-  return result
-}
-exports.unpack = unpack
+  return result;
+};
+exports.unpack = unpack;
 
 var calc_size = function(calls) {
-  var size = 0
+  var size = 0;
   calls.forEach(function(c) {
-    size += c.size * c.entry.size
-  })
-  return size
-}
+    size += c.size * c.entry.size;
+  });
+  return size;
+};
 
 var calcsize = function(fmt) {
-  var calls = fmt_to_list(fmt, '')
-  return calc_size(calls)
-}
-exports.calcsize = calcsize
+  var calls = fmt_to_list(fmt, '');
+  return calc_size(calls);
+};
+exports.calcsize = calcsize;
 
 var pack = function(fmt) {
-  var calls = fmt_to_list(fmt, 'write')
-  var result = new Buffer(calc_size(calls))
-  var values = Array.prototype.slice.call(arguments, 1)
+  var calls = fmt_to_list(fmt, 'write');
+  var result = new Buffer(calc_size(calls));
+  var values = Array.prototype.slice.call(arguments, 1);
 
-  var expected = 0
-  calls.forEach(function(c) { expected += c.size })
+  var expected = 0;
+  calls.forEach(function(c) {
+    expected += c.size;
+  });
 
-  if (expected != values.length) {
-    throw new Error("Argument mismatch, Expected: " + expected + " Received: " + values.length)
+  if (expected !== values.length) {
+    throw new Error("Argument mismatch, Expected: " + expected + " Received: " + values.length);
   }
 
-  var pos = 0
-  var arg_pos = 0
+  var pos = 0;
+  var arg_pos = 0;
+  var i;
 
-  for (var i=0; i<calls.length; i++) {
-    var call = calls[i]
-    var arg  = values[arg_pos]
+  for (i=0; i<calls.length; i++) {
+    var call = calls[i];
+    var arg  = values[arg_pos];
     if (call.entry.string) {
-      result.write(arg, pos, arg.length)
-      arg_pos += 1
-      pos += call.size * call.entry.size
+      result.write(arg, pos, arg.length);
+      arg_pos += 1;
+      pos += call.size * call.entry.size;
     } else {
-      for (var j=0; j<call.size; j++) {
-        var arg = values[arg_pos]
-        Buffer.prototype[call.meth].call(result, arg, pos)
-        pos += call.entry.size
-        arg_pos += 1
+      var j;
+      for (j=0; j<call.size; j++) {
+        Buffer.prototype[call.meth].call(result, arg, pos);
+        pos += call.entry.size;
+        arg_pos += 1;
       }
     }
   }
 
-  return result
-}
-exports.pack = pack
+  return result;
+};
+exports.pack = pack;
