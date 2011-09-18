@@ -155,7 +155,9 @@ var fmt_to_list = function(fmt, prefix) {
   return result;
 };
 
-var unpack = function(fmt, input, encoding) {
+var unpack = function(fmt, input, encoding, pos) {
+  var calls, result = [];
+
   if (!Buffer.isBuffer(input)) {
     throw new Error("Input not a buffer object");
   }
@@ -164,10 +166,11 @@ var unpack = function(fmt, input, encoding) {
     encoding = 'ascii';
   }
 
-  var calls = fmt_to_list(fmt, 'read');
+  calls = fmt_to_list(fmt, 'read');
 
-  var result = [];
-  var pos = 0;
+  if (pos === undefined) {
+    pos = 0;
+  }
 
   calls.forEach(function(c) {
     var i;
