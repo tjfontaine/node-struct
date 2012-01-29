@@ -203,10 +203,23 @@ var calcsize = function(fmt) {
 };
 exports.calcsize = calcsize;
 
-var pack = function(fmt) {
+var pack = function(fmt, buff, buf_pos) {
   var calls = fmt_to_list(fmt, 'write');
-  var result = new Buffer(calc_size(calls));
-  var values = Array.prototype.slice.call(arguments, 1);
+  var size = calc_size(calls);
+  var result, values, position;
+
+  if (buff instanceof Buffer) {
+    if (size + buf_pos > buff.length) {
+      throw new Error("Buffer not large enough for packing");
+    }
+    result = buff;
+    position = buf_pos;
+    values = Array.prototype.slice.call(arguments, 3);
+  } else {
+    result = new Buffer(size);
+    position = 0;
+    values = Array.prototype.slice.call(arguments, 1);
+  }
 
   var expected = 0;
   calls.forEach(function(c) {
@@ -225,13 +238,13 @@ var pack = function(fmt) {
     var call = calls[i];
     var arg  = values[arg_pos];
     if (call.entry.string) {
-      result.write(arg, pos, arg.length);
+      result.write(arg, pos + position, arg.length);
       arg_pos += 1;
       pos += call.size * call.entry.size;
     } else {
       var j;
       for (j=0; j<call.size; j++) {
-        Buffer.prototype[call.meth].call(result, arg, pos);
+        Buffer.prototype[call.meth].call(result, arg, pos + position);
         pos += call.entry.size;
         arg_pos += 1;
       }

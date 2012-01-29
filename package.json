@@ -1,12 +1,16 @@
 {
-  "name": "struct",
-  "version": "0.0.1",
+  "name": "pystruct",
+  "version": "0.0.2",
+  "author": "Timothy J Fontaine <tjfontaine@gmail.com> (http://atxconsulting.com)",
   "description": "Buffer based implementation of python's struct module",
   "keywords": [
     "struct",
     "python"
   ],
   "homepage": "http://github.com/tjfontaine/node-struct",
+  "bugs": "http://github.com/tjfontaine/node-struct/issues",
   "main": "struct.js",
-  "dependencies": []
+  "engines": {
+    "node": ">= 0.5.0"
+  }
 }
